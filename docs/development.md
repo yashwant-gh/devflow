@@ -13,7 +13,7 @@ This guide covers local development workflows, code architecture, testing conven
 
 ### Initializing the Workspace
 ```bash
-git clone https://github.com/devflow-cli/devflow.git
+git clone https://github.com/yashwant-gh/devflow.git
 cd devflow
 
 # Install project dependencies

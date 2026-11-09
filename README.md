@@ -117,6 +117,37 @@ flowchart TD
 
 ---
 
+## Installation from npm
+
+The easiest way to install DevFlow is through npm.
+
+**Prerequisites:** Node.js >= 18 and npm >= 9.
+
+```bash
+npm install -g devflow-toolkit
+```
+
+Verify the installation:
+
+```bash
+devflow --version
+devflow --help
+devflow doctor
+```
+
+To update DevFlow:
+
+```bash
+npm update -g devflow-toolkit
+```
+
+To uninstall:
+
+```bash
+npm uninstall -g devflow-toolkit
+```
+---
+
 ## Installation from GitHub
 
 Clone the repository directly from GitHub:
@@ -168,7 +199,7 @@ npm run dev -- --help
 To remove the global symlink:
 
 ```bash
-npm unlink -g devflow-cli
+npm uninstall -g devflow-toolkit
 ```
 
 ---

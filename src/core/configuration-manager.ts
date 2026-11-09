@@ -29,20 +29,20 @@ export const DevFlowConfigSchema = z.object({
       requireGitignore: z.boolean().default(true),
       requireTypeChecking: z.boolean().default(true),
     })
-    .default({}),
+    .prefault({}),
   quality: z
     .object({
       minimumCoverage: z.number().min(0).max(100).default(70),
       failOnLintError: z.boolean().default(true),
       failOnTypeError: z.boolean().default(true),
     })
-    .default({}),
+    .prefault({}),
   security: z
     .object({
       failOn: z.array(z.enum(SUPPORTED_SEVERITIES)).default(['high', 'critical']),
       autoFix: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   ci: z
     .object({
       provider: z.enum(['github-actions', 'gitlab']).default('github-actions'),

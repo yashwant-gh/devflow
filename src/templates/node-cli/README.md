@@ -2,7 +2,7 @@
 
 > {{description}}
 
-Generated with [DevFlow](https://github.com/devflow-cli/devflow).
+Generated with [DevFlow](https://github.com/yashwant-gh/devflow).
 
 ## Installation
 
