@@ -6,7 +6,7 @@ Thank you for your interest in contributing to DevFlow! We appreciate community 
 
 ## Code of Conduct
 
-All contributors and maintainers are expected to uphold a welcoming, respectful, and professional community.
+All contributors and maintainers are expected to uphold a welcoming, respectful, and professional community. Please review our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ---
 

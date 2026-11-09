@@ -49,5 +49,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 100% offline deterministic knowledge engine fallback.
   - Explicit consent guardrails for cloud LLM usage.
 - **Comprehensive Test Suite & CI/CD:**
-  - 53 unit and integration tests passing with Vitest.
+  - 98 unit and integration tests passing with Vitest across 19 suites.
   - DevFlow CI, CodeQL, release automation, and Dependabot configuration.

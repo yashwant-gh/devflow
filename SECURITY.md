@@ -16,7 +16,7 @@ The DevFlow engineering team takes security vulnerabilities seriously. If you di
 
 ### Reporting Process
 
-1. Email your vulnerability details to: `security@devflow.local` (or file a confidential GitHub Security Advisory).
+1. Open a confidential GitHub Security Advisory at `https://github.com/yashwant-gh/devflow/security/advisories/new` or report directly via repository security channels.
 2. Include:
    - Description of the vulnerability and potential impact.
    - Exact steps or minimal reproduction script.

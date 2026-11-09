@@ -1,0 +1,59 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in DevFlow
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug report! Please provide as much detail as possible to help us reproduce and resolve the issue.
+  - type: input
+    id: version
+    attributes:
+      label: DevFlow Version
+      description: Run `devflow --version` to find your version.
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux (Ubuntu, Debian, etc.)
+        - macOS
+        - Windows 10 / 11
+        - WSL (Windows Subsystem for Linux)
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: Run `node -v`.
+      placeholder: e.g. v20.12.0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: Clear and concise description of what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Exact commands executed to reproduce the issue.
+      placeholder: |
+        1. Run 'devflow init my-project ...'
+        2. Run 'devflow check'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal Output / Error Logs
+      description: Paste relevant terminal logs with `--verbose` enabled if available (ensure secrets are not included).
+      render: shell

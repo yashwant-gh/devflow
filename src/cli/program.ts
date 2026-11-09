@@ -99,7 +99,7 @@ ${chalk.bold('EXAMPLES:')}
   $ ${chalk.cyan('devflow pr summary')}
   $ ${chalk.cyan('devflow standards check')}
 
-${chalk.dim('Documentation: https://github.com/devflow-cli/devflow')}
+${chalk.dim('Documentation: https://github.com/yashwant-gh/devflow')}
 `;
   });
 
