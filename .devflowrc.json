@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "project": {
+    "name": "devflow-cli",
+    "type": "node-cli"
+  },
+  "standards": {
+    "requireReadme": true,
+    "requireTests": true,
+    "requireDocker": true,
+    "requireCICD": true,
+    "requireEnvExample": true,
+    "requireGitignore": true,
+    "requireTypeChecking": true
+  },
+  "quality": {
+    "minimumCoverage": 70,
+    "failOnLintError": true,
+    "failOnTypeError": true
+  },
+  "security": {
+    "failOn": [
+      "high",
+      "critical"
+    ],
+    "autoFix": false
+  },
+  "ci": {
+    "provider": "github-actions",
+    "profile": "standard"
+  }
+}
