@@ -4,7 +4,8 @@
   "description": "Build smarter. Standardize everything. Ship with confidence. DevFlow is an extensible developer workflow automation platform.",
   "type": "module",
   "bin": {
-    "devflow": "./dist/cli/index.js"
+    "devflow": "./dist/cli/index.js",
+    "devflow-cli": "./dist/cli/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

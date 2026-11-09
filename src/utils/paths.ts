@@ -6,10 +6,13 @@ import { FilesystemError } from './errors.js';
  * preventing directory traversal attacks.
  */
 export function resolveSafePath(baseDir: string, relativeOrAbsolutePath: string): string {
+  // Normalize backslashes to forward slashes so Windows-style traversals (..\..\)
+  // are properly evaluated as directory separators across all platforms (including Linux/POSIX).
+  const normalizedInput = relativeOrAbsolutePath.replace(/\\/g, '/');
   const resolvedBase = path.resolve(baseDir);
-  const resolvedTarget = path.isAbsolute(relativeOrAbsolutePath)
-    ? path.resolve(relativeOrAbsolutePath)
-    : path.resolve(resolvedBase, relativeOrAbsolutePath);
+  const resolvedTarget = path.isAbsolute(normalizedInput)
+    ? path.resolve(normalizedInput)
+    : path.resolve(resolvedBase, normalizedInput);
 
   // Check if target is equal to or sub-path of resolvedBase
   const relative = path.relative(resolvedBase, resolvedTarget);

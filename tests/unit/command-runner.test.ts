@@ -75,7 +75,11 @@ describe('CommandRunner Subprocess Execution & Safety Verification', () => {
     const runner = new CommandRunner();
     // Pass args with special characters that would break if passed through a raw shell
     const specialArg = 'arg; with & specials && | $(whoami) `echo 1` < > * " \' ';
-    const result = await runner.run('node', ['-e', 'console.log(process.argv[1])', specialArg]);
+    const result = await runner.run('node', [
+      '-e',
+      'console.log(process.argv.slice(1).pop())',
+      specialArg,
+    ]);
     expect(result.exitCode).toBe(0);
     expect(result.stdout.trim()).toBe(specialArg.trim());
   });
@@ -89,7 +93,9 @@ describe('CommandRunner Subprocess Execution & Safety Verification', () => {
       cwd: spacedDir,
     });
     expect(result.exitCode).toBe(0);
-    expect(path.resolve(result.stdout.trim())).toBe(path.resolve(spacedDir));
+    const realSpacedDir = await fs.realpath(spacedDir);
+    const realStdout = await fs.realpath(result.stdout.trim());
+    expect(realStdout).toBe(realSpacedDir);
   });
 
   it('9. should check executable availability accurately', async () => {
