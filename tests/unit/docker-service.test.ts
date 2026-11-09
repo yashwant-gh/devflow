@@ -23,7 +23,7 @@ describe('DockerService Generation, Validation, and Build Intelligence', () => {
     }
   });
 
-  it('should generate Node.js multi-stage Dockerfile and docker-compose', async () => {
+  it('1. should generate Node.js multi-stage Dockerfile and docker-compose', async () => {
     await fs.writeJson(path.join(tempDir, 'package.json'), {
       name: 'dockerized-api',
       dependencies: { express: '^4.21.0' },
@@ -52,7 +52,7 @@ describe('DockerService Generation, Validation, and Build Intelligence', () => {
     expect(validation.hasCompose).toBe(true);
   });
 
-  it('should clearly distinguish when Docker CLI is not installed', async () => {
+  it('2. should clearly distinguish when Docker CLI is not installed', async () => {
     await fs.writeFile(path.join(tempDir, 'Dockerfile'), 'FROM node:22-alpine\nCMD ["node"]\n');
 
     vi.spyOn(commandRunner, 'isExecutableAvailable').mockResolvedValue(false);
@@ -69,7 +69,7 @@ describe('DockerService Generation, Validation, and Build Intelligence', () => {
     expect(validation.warnings.some((w) => w.includes('Docker CLI is not installed'))).toBe(true);
   });
 
-  it('should clearly distinguish when Docker is installed but daemon is stopped', async () => {
+  it('3. should clearly distinguish when Docker is installed but daemon is stopped', async () => {
     await fs.writeFile(
       path.join(tempDir, 'Dockerfile'),
       'FROM node:22-alpine\nUSER node\nCMD ["node"]\n',
@@ -98,7 +98,41 @@ describe('DockerService Generation, Validation, and Build Intelligence', () => {
     expect(validation.warnings.some((w) => w.includes('daemon is stopped'))).toBe(true);
   });
 
-  it('should reject build request with clear error when Docker daemon is not running', async () => {
+  it('4. should identify when Docker daemon is running and active', async () => {
+    await fs.writeFile(
+      path.join(tempDir, 'Dockerfile'),
+      'FROM node:22-alpine\nUSER node\nCMD ["node"]\n',
+    );
+
+    vi.spyOn(commandRunner, 'isExecutableAvailable').mockResolvedValue(true);
+    vi.spyOn(commandRunner, 'run').mockResolvedValue({
+      command: 'docker version',
+      args: [],
+      exitCode: 0,
+      stdout: '27.2.0',
+      stderr: '',
+      durationMs: 15,
+    });
+
+    const status = await dockerService.checkDockerStatus();
+    expect(status.installed).toBe(true);
+    expect(status.daemonRunning).toBe(true);
+    expect(status.version).toBe('27.2.0');
+
+    const validation = await dockerService.validate(tempDir);
+    expect(validation.valid).toBe(true);
+    expect(validation.status).toBe('running');
+    expect(validation.daemonRunning).toBe(true);
+  });
+
+  it('5. should reject build request when Dockerfile is missing', async () => {
+    const buildResult = await dockerService.buildImage({ cwd: tempDir, tag: 'my-app:1.0' });
+    expect(buildResult.success).toBe(false);
+    expect(buildResult.failureReason).toBe('no_dockerfile');
+    expect(buildResult.error).toContain('No Dockerfile found');
+  });
+
+  it('6. should reject build request with clear error when Docker daemon is not running', async () => {
     await fs.writeFile(path.join(tempDir, 'Dockerfile'), 'FROM node:22-alpine\n');
 
     vi.spyOn(commandRunner, 'isExecutableAvailable').mockResolvedValue(true);
@@ -117,7 +151,72 @@ describe('DockerService Generation, Validation, and Build Intelligence', () => {
     expect(buildResult.error).toContain('Docker daemon is not running');
   });
 
-  it('should detect invalid Dockerfile syntax missing FROM instruction', async () => {
+  it('7. should report build failure and error output when docker build command fails', async () => {
+    await fs.writeFile(path.join(tempDir, 'Dockerfile'), 'FROM node:22-alpine\nRUN exit 1\n');
+
+    vi.spyOn(commandRunner, 'isExecutableAvailable').mockResolvedValue(true);
+    vi.spyOn(commandRunner, 'run').mockImplementation(async (file, args) => {
+      if (args[0] === 'version') {
+        return {
+          command: 'docker version',
+          args,
+          exitCode: 0,
+          stdout: '27.0.0',
+          stderr: '',
+          durationMs: 5,
+        };
+      }
+      return {
+        command: 'docker build',
+        args,
+        exitCode: 1,
+        stdout: 'Step 1/2: FROM node:22-alpine\nStep 2/2: RUN exit 1',
+        stderr: 'The command "/bin/sh -c exit 1" returned a non-zero code: 1',
+        durationMs: 120,
+      };
+    });
+
+    const buildResult = await dockerService.buildImage({
+      cwd: tempDir,
+      tag: 'failing-image:latest',
+    });
+    expect(buildResult.success).toBe(false);
+    expect(buildResult.failureReason).toBe('build_failed');
+    expect(buildResult.error).toContain('returned a non-zero code: 1');
+  });
+
+  it('8. should report success ONLY when docker build actually succeeds', async () => {
+    await fs.writeFile(path.join(tempDir, 'Dockerfile'), 'FROM node:22-alpine\nCMD ["node"]\n');
+
+    vi.spyOn(commandRunner, 'isExecutableAvailable').mockResolvedValue(true);
+    vi.spyOn(commandRunner, 'run').mockImplementation(async (file, args) => {
+      if (args[0] === 'version') {
+        return {
+          command: 'docker version',
+          args,
+          exitCode: 0,
+          stdout: '27.0.0',
+          stderr: '',
+          durationMs: 5,
+        };
+      }
+      return {
+        command: 'docker build',
+        args,
+        exitCode: 0,
+        stdout: 'Successfully built 7d5a8b9e1c2d\nSuccessfully tagged my-app:2.0',
+        stderr: '',
+        durationMs: 250,
+      };
+    });
+
+    const buildResult = await dockerService.buildImage({ cwd: tempDir, tag: 'my-app:2.0' });
+    expect(buildResult.success).toBe(true);
+    expect(buildResult.tag).toBe('my-app:2.0');
+    expect(buildResult.output).toContain('Successfully built');
+  });
+
+  it('9. should detect invalid Dockerfile syntax missing FROM instruction', async () => {
     await fs.writeFile(path.join(tempDir, 'Dockerfile'), 'RUN echo "missing FROM"\n');
 
     const validation = await dockerService.validate(tempDir);

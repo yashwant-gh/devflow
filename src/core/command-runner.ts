@@ -103,17 +103,31 @@ export class CommandRunner {
       }
 
       if (result.exitCode !== 0 && !options.allowFailure) {
+        const isNotFound =
+          (result as any).code === 'ENOENT' ||
+          stderr.includes('ENOENT') ||
+          stderr.includes('not recognized as an internal or external command') ||
+          stderr.includes('command not found') ||
+          stderr.includes('not found');
+
+        if (isNotFound) {
+          throw new DependencyError(
+            `Required executable "${file}" was not found in your system PATH.`,
+            {
+              context: { file, command: commandStr, exitCode: result.exitCode },
+              suggestion: `Please install "${file}" or verify that it is in your system PATH.`,
+            },
+          );
+        }
+
         throw new ProcessExecutionError(
           `Command "${commandStr}" failed with exit code ${result.exitCode}.`,
           {
             processExitCode: result.exitCode ?? 1,
             stdout,
             stderr,
-            context: { command: commandStr, exitCode: result.exitCode, cwd: options.cwd },
-            suggestion:
-              stderr.includes('not found') || stderr.includes('ENOENT')
-                ? `Ensure "${file}" is installed and available in your system PATH.`
-                : `Review the error output above and verify arguments.`,
+            context: { command: commandStr, exitCode: result.exitCode, cwd: targetCwd },
+            suggestion: `Review the error output above and verify arguments.`,
           },
         );
       }
@@ -127,7 +141,7 @@ export class CommandRunner {
         durationMs,
       };
     } catch (err: unknown) {
-      if (err instanceof ProcessExecutionError) {
+      if (err instanceof ProcessExecutionError || err instanceof DependencyError) {
         throw err;
       }
 

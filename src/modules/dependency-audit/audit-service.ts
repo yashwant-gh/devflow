@@ -135,7 +135,35 @@ export class AuditService {
     }
 
     const resolveInstalledVersion = (pkgName: string, nodes: string[]): string => {
-      // 1. Check package.json inside node_modules on disk
+      const foundVersions = new Set<string>();
+
+      // 1. Check specific node paths from npm audit (handles nested dependencies and multiple installed versions)
+      for (const node of nodes) {
+        // Try on disk at exact node path
+        try {
+          const nestedDiskPath = path.join(root, node, 'package.json');
+          if (fs.existsSync(nestedDiskPath)) {
+            const diskPkg = fs.readJsonSync(nestedDiskPath);
+            if (diskPkg?.version) {
+              foundVersions.add(String(diskPkg.version));
+              continue;
+            }
+          }
+        } catch {
+          // Ignore filesystem read error
+        }
+
+        // Try lockfile packages map at exact node path
+        if (lockfilePackages[node]?.version) {
+          foundVersions.add(String(lockfilePackages[node].version));
+        }
+      }
+
+      if (foundVersions.size > 0) {
+        return Array.from(foundVersions).join(', ');
+      }
+
+      // 2. Fallback to top-level node_modules on disk
       try {
         const onDiskPath = path.join(root, 'node_modules', pkgName, 'package.json');
         if (fs.existsSync(onDiskPath)) {
@@ -148,18 +176,13 @@ export class AuditService {
         // Ignore filesystem read error
       }
 
-      // 2. Check lockfile packages entries (npm v7+ lockfile format)
-      for (const node of nodes) {
-        if (lockfilePackages[node]?.version) {
-          return String(lockfilePackages[node].version);
-        }
-      }
+      // 3. Fallback to top-level lockfile packages entry (npm v7+ lockfile format)
       const defaultNode = `node_modules/${pkgName}`;
       if (lockfilePackages[defaultNode]?.version) {
         return String(lockfilePackages[defaultNode].version);
       }
 
-      // 3. Check legacy dependencies entry (npm v6 lockfile format)
+      // 4. Fallback to legacy dependencies entry (npm v6 lockfile format)
       if (lockfileDependencies[pkgName]?.version) {
         return String(lockfileDependencies[pkgName].version);
       }
@@ -273,16 +296,12 @@ export class AuditService {
                   id: advisoryId,
                   package: pkgName,
                   severity,
-                  installedVersion:
-                    installedVersion !== 'Unknown'
-                      ? installedVersion
-                      : vulnData.range
-                        ? `Vulnerable range: ${vulnData.range}`
-                        : 'Unknown',
+                  installedVersion,
                   fixedVersion,
                   vulnerableRange: vulnData.range,
                   title,
                   url: advisoryUrl,
+                  path: nodes.length > 0 ? nodes.join(', ') : undefined,
                   remediation,
                   isDirect,
                 };
@@ -308,6 +327,10 @@ export class AuditService {
             auditStatus = 'network_error';
             auditError =
               'Could not connect to the npm registry. Check your network or registry settings.';
+          } else if (auditResult.exitCode !== 0 || auditRawOutput.trim().length > 0) {
+            auditStatus = 'skipped';
+            auditError =
+              'Failed to parse npm audit output. Data format was invalid or unrecognized.';
           }
         }
       } catch (err) {
@@ -351,6 +374,9 @@ export class AuditService {
       policyPassed = false;
       recommendation =
         'No lockfile found. Run "npm install" to generate package-lock.json before auditing.';
+    } else if (auditStatus === 'skipped') {
+      policyPassed = false;
+      recommendation = `Security audit could not be completed: ${auditError || 'Audit output error'}.`;
     }
 
     const report: SecurityAuditReport = {

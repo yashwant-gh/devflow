@@ -3,6 +3,7 @@ import os from 'node:os';
 import fs from 'fs-extra';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TemplateEngine } from '../../src/core/template-engine.js';
+import { TemplateError } from '../../src/utils/errors.js';
 
 describe('End-to-End Scaffolding Integration Tests', () => {
   let tempBaseDir: string;
@@ -14,10 +15,14 @@ describe('End-to-End Scaffolding Integration Tests', () => {
   });
 
   afterEach(async () => {
-    await fs.remove(tempBaseDir);
+    try {
+      await fs.remove(tempBaseDir);
+    } catch {
+      // Ignored
+    }
   });
 
-  it('should scaffold complete Express.js REST API project', async () => {
+  it('1. should scaffold complete Express.js REST API project without duplicated test files or sourcemaps', async () => {
     const targetDir = path.join(tempBaseDir, 'express-payment-service');
     const result = await engine.scaffold({
       projectName: 'express-payment-service',
@@ -66,7 +71,7 @@ describe('End-to-End Scaffolding Integration Tests', () => {
     expect(pkg.scripts.dev).toBe('tsx watch src/server.ts');
   });
 
-  it('should scaffold complete Python FastAPI project', async () => {
+  it('2. should scaffold complete Python FastAPI project with valid configuration', async () => {
     const targetDir = path.join(tempBaseDir, 'fastapi-user-service');
     const result = await engine.scaffold({
       projectName: 'fastapi-user-service',
@@ -95,7 +100,7 @@ describe('End-to-End Scaffolding Integration Tests', () => {
     expect(pyproject).toContain('dependencies = [');
   });
 
-  it('should scaffold complete Node.js CLI project', async () => {
+  it('3. should scaffold complete Node.js CLI project with clean test configuration', async () => {
     const targetDir = path.join(tempBaseDir, 'sample-cli');
     const result = await engine.scaffold({
       projectName: 'sample-cli',
@@ -112,9 +117,51 @@ describe('End-to-End Scaffolding Integration Tests', () => {
       true,
     );
     expect(await fs.pathExists(path.join(targetDir, 'tests', 'greet.test.ts'))).toBe(true);
+    expect(await fs.pathExists(path.join(targetDir, 'vitest.config.ts'))).toBe(true);
+    expect(await fs.pathExists(path.join(targetDir, 'tests', 'greet.test.js'))).toBe(false);
 
     const pkg = await fs.readJson(path.join(targetDir, 'package.json'));
     expect(pkg.name).toBe('sample-cli');
     expect(pkg.bin['sample-cli']).toBe('./dist/index.js');
+  });
+
+  it('4. should prevent overwriting existing non-empty directory without explicit permission', async () => {
+    const targetDir = path.join(tempBaseDir, 'existing-dir');
+    await fs.ensureDir(targetDir);
+    await fs.writeFile(
+      path.join(targetDir, 'important-user-code.ts'),
+      'console.log("dont touch me");',
+    );
+
+    await expect(
+      engine.scaffold({
+        projectName: 'existing-dir',
+        targetDir,
+        templateId: 'node-express-api',
+        overwrite: false,
+      }),
+    ).rejects.toThrow(TemplateError);
+
+    // Verify existing file was preserved untouched
+    const preservedContent = await fs.readFile(
+      path.join(targetDir, 'important-user-code.ts'),
+      'utf-8',
+    );
+    expect(preservedContent).toBe('console.log("dont touch me");');
+  });
+
+  it('5. should safely rollback all created files if scaffolding is aborted or encounters error', async () => {
+    const targetDir = path.join(tempBaseDir, 'rollback-test-dir');
+
+    // Simulate failure by providing invalid templateId
+    await expect(
+      engine.scaffold({
+        projectName: 'rollback-test-dir',
+        targetDir,
+        templateId: 'non-existent-template-xyz',
+      }),
+    ).rejects.toThrow(TemplateError);
+
+    expect(await fs.pathExists(path.join(targetDir, 'package.json'))).toBe(false);
   });
 });

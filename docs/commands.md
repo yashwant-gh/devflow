@@ -133,12 +133,19 @@ devflow lint
 
 ---
 
-## 8. `devflow docker` & `devflow docker validate`
+## 8. `devflow docker validate`, `init`, `build`
 
-Manage and validate Docker and Docker Compose setup.
+Manage, generate, validate, and build Docker container configurations.
+
+### Commands
+- `devflow docker validate`: Validate Dockerfile and Docker Compose configuration syntax, and check Docker CLI and daemon runtime status.
+- `devflow docker init`: Generate production Dockerfile and Docker Compose configurations (`--postgres`, `--redis`, `--port`).
+- `devflow docker build [tag]`: Build container image using Dockerfile (requires active Docker daemon; never fabricates success).
 
 ```bash
 devflow docker validate
+devflow docker init --postgres
+devflow docker build my-service:latest
 ```
 
 ---

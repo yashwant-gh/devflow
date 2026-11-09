@@ -272,10 +272,17 @@ devflow add docker --postgres --redis
 
 ### Infrastructure
 
-#### `devflow docker validate`
-Validates Dockerfile and Docker Compose syntax and runtime configuration.
+#### `devflow docker validate`, `init`, `build`
+Manages, generates, validates, and builds Docker container configurations.
 ```bash
+# Validate Dockerfile and Compose setup, CLI and daemon runtime status
 devflow docker validate
+
+# Initialize Dockerfile and Compose for an existing project
+devflow docker init --postgres --redis
+
+# Build container image (requires active Docker daemon; never fabricates success)
+devflow docker build order-service:latest
 ```
 
 #### `devflow ci init`
