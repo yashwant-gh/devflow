@@ -1,9 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+
+from app.api.routes import api_router
 from app.core.config import settings
 from app.core.logging import logger
-from app.api.routes import api_router
+
 
 def create_application() -> FastAPI:
     app = FastAPI(
@@ -19,7 +22,7 @@ def create_application() -> FastAPI:
         return {
             "status": "healthy",
             "service": settings.PROJECT_NAME,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     # Exception handler
@@ -35,5 +38,6 @@ def create_application() -> FastAPI:
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
     return app
+
 
 app = create_application()

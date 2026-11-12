@@ -1,5 +1,5 @@
 export const PRODUCT_NAME = 'DevFlow';
-export const PRODUCT_VERSION = '1.0.0';
+export const PRODUCT_VERSION = '1.0.1';
 export const PRODUCT_TAGLINE = 'Build smarter. Standardize everything. Ship with confidence.';
 export const CONFIG_FILE_NAME = '.devflowrc.json';
 export const USER_CONFIG_FILE_NAME = '.devflowrc.json';

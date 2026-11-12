@@ -1,6 +1,6 @@
 {
   "name": "devflow-toolkit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Build smarter. Standardize everything. Ship with confidence. DevFlow is an extensible developer workflow automation platform.",
   "type": "module",
   "bin": {
@@ -24,7 +24,6 @@
   },
   "files": [
     "dist",
-    "templates",
     "README.md",
     "LICENSE"
   ],

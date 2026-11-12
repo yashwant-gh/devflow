@@ -5,7 +5,7 @@ describe('CLI Commands Integration', () => {
   it('should initialize Commander program with expected metadata and commands', () => {
     const program = createProgram();
     expect(program.name()).toBe('devflow');
-    expect(program.version()).toBe('1.0.0');
+    expect(program.version()).toBe('1.0.1');
 
     const commandNames = program.commands.map((c) => c.name());
     expect(commandNames).toContain('init');
